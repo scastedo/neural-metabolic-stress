@@ -3,7 +3,16 @@ import argparse
 import json
 from pathlib import Path
 
-from reproduction_paths import BUNDLE_ROOT, CANN_RUNS_DIR, CANN_STATIC_RUNS_DIR, INPUT_DIRS
+from reproduction_paths import BUNDLE_ROOT, CANN_RUNS_DIR, CANN_STATIC_RUNS_DIR, INPUT_DIRS, STYLE_PATH
+
+
+SECTIONS = {
+    "all": ("data", "models", "static"),
+    "data": ("data",),
+    "models": ("models", "static"),
+    "static": ("static",),
+    "continuous-attractor": (),
+}
 
 
 def check_simulation_runs(runs_dir=CANN_RUNS_DIR, require_energy=True):
@@ -35,19 +44,18 @@ def check_simulation_runs(runs_dir=CANN_RUNS_DIR, require_energy=True):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--section", choices=["all", "data", "models", "static", "continuous-attractor"], default="all")
+    parser.add_argument("--section", choices=SECTIONS, default="all")
     parser.add_argument("--cached-only", action="store_true",
                         help="Check the listed files without requiring raw dynamic or static simulation run folders.")
     parser.add_argument("--json", action="store_true", dest="as_json")
     args = parser.parse_args()
     manifest = json.loads((BUNDLE_ROOT / "DATA_MANIFEST.json").read_text())
-    rows = []
-    for item in manifest["inputs"]:
-        if args.section != "all" and args.section not in item["sections"]:
-            continue
-        path = INPUT_DIRS[item["path_group"]] / item["relative_path"]
-        rows.append({"path": str(path), "present": path.is_file(),
-                     "included_in_bundle": item["included_in_bundle"]})
+    rows = [{"path": str(STYLE_PATH), "present": STYLE_PATH.is_file()}]
+    for section in SECTIONS[args.section]:
+        for group, filenames in manifest[section].items():
+            for filename in filenames:
+                path = INPUT_DIRS[group] / filename
+                rows.append({"path": str(path), "present": path.is_file()})
     simulation = (check_simulation_runs()
                   if not args.cached_only and args.section in ["all", "continuous-attractor"] else None)
     static_simulation = (check_simulation_runs(CANN_STATIC_RUNS_DIR, require_energy=False)

@@ -281,13 +281,12 @@ def simulate(
             if gen % block_size == 0:
                 if has_theta_noise:
                     z = torch.randn(net.num_neurons, device=net.device) * net.sigma_theta_steps
-                    xnoise = z #* net.input_bump_profile
+                    xnoise = z 
 
             if has_syn_fail:
                 syn_ok = torch.bernoulli(torch.full((net.num_neurons,), 1.0 - net.syn_fail, device=net.device))
                 spon = torch.bernoulli(torch.full((net.num_neurons,), net.spon_rel, device=net.device))
             if has_sigma_eta:
-                # noise = torch.randn(net.num_neurons, device=net.device) * net.sigma_eta
                 noise = torch.randn(net.num_neurons, device=net.device)
 
             # one sweep = N updates in random order

@@ -128,13 +128,8 @@ class CANNetwork(nn.Module):
         diff = torch.min(diff, self.num_neurons - diff)
         threshold = self.recurrent_width_fraction * self.num_neurons / 2
         self.weights = (diff <= threshold).float() / self.num_neurons
-        # Inhibitory connections make negative or by enforcing an average fraction of active in dynamics
-        # self.weights = self.weights - 1*(diff > threshold).float()/self.num_neurons
         self.weights.fill_diagonal_(0)
-        self.weights = self.weights # MULTIPLY BY 2?
-        # A = torch.randn(self.num_neurons, self.num_neurons, device=self.device)
-        # Q, _ = torch.linalg.qr(A)
-        # self.weights = Q @ self.weights @ Q.T
+        self.weights = self.weights
 
 
     def initialize_state(self) -> None:
@@ -143,8 +138,7 @@ class CANNetwork(nn.Module):
         """
         self.state = torch.zeros(self.num_neurons, dtype=torch.float32, device=self.device)
         num_active = int(self.threshold_active_fraction * self.num_neurons)
-        # active_indices = torch.randperm(self.num_neurons, device=self.device)[:num_active]
-        #Random index but all together
+        # Initialize a contiguous group of active neurons at a random position.
         start_index = torch.randint(0, self.num_neurons - num_active + 1, (1,),
                                      device=self.device).item()
         active_indices = torch.arange(start_index, start_index + num_active,

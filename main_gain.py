@@ -321,20 +321,20 @@ def make_network_params(spec: RunSpec) -> dict:
     """Build the simulator kwargs for a single run."""
     return {
         "num_neurons": spec.num_neurons,
-        "sigma_temp": spec.sigma_temp,                      #PARAM VARY NEEDS SCALING 
-        "sigma_input": spec.cann_width / 2,            #between 0 and recurrent width
-        "I_str": spec.i_str,                                               # WHAT TO FIX PINN AS (FUNCTION OF NOISE LEVEL?) 
-        "I_dir": spec.idir,                    #PARAM NO SCALE 
-        "syn_fail": spec.syn_fail,                       #DONT TOUCH
-        "spon_rel": spec.spon_rel,                       #DONT TOUCH
-        "sigma_eta": spec.sigma_eta,                       #PARAM VARY NEEDS SCALING
-        "input_resistance": spec.rin,                      #PARAM VARY NEEDS SCALING
-        "ampar_conductance": spec.ampar,                   #PARAM VARY NEEDS SCALING
-        "constrict": 1.0,                      #DONT TOUCH
+        "sigma_temp": spec.sigma_temp,
+        "sigma_input": spec.cann_width / 2,
+        "I_str": spec.i_str,
+        "I_dir": spec.idir,
+        "syn_fail": spec.syn_fail,
+        "spon_rel": spec.spon_rel,
+        "sigma_eta": spec.sigma_eta,
+        "input_resistance": spec.rin,
+        "ampar_conductance": spec.ampar,
+        "constrict": 1.0,
         "recurrent_width_fraction": spec.cann_width,
         "threshold_active_fraction": spec.active_fraction,
-        "block_size": spec.block_size,                        #DONT TOUCH
-        "sigma_theta": spec.sigma_theta,   #PARAM VARY NEEDS SCALING
+        "block_size": spec.block_size,
+        "sigma_theta": spec.sigma_theta,
         "gain_dynamics": spec.gain_dynamics,
     }
 
@@ -393,8 +393,6 @@ def progress_logger(spec: RunSpec):
 def run_experiment(spec: RunSpec) -> Path:
     logging.info("Starting run %s", spec.run_id)
     torch.manual_seed(spec.seed)
-    # update_strategy = update_strategies.MetropolisUpdateStrategy3()
-    # update_strategy = update_strategies.MetropolisUpdateStrategyPadamsey()
     update_strategy = update_strategies.MetropolisUpdateStrategyMixedPadamsey(
         p_swap=spec.p_swap,
         db_food_restricted=spec.db_fr,

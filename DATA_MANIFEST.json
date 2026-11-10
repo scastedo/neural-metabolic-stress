@@ -1,223 +1,46 @@
 {
-  "format_version": 1,
-  "inputs": [
-    {
-      "path_group": "raw",
-      "relative_path": "predictions_fullTrace_hungry.npy",
-      "bundle_path": "data/raw/predictions_fullTrace_hungry.npy",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 1022613796
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "metadata_deconv/stimAngle_hungry.mat",
-      "bundle_path": "data/raw/metadata_deconv/stimAngle_hungry.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 2806,
-      "sha256": "9992b32e7a847de881af7c93561b75c4a05e160ca5b3e78f40e8f53d356bfb2a"
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "metadata_deconv/stimSpatFreq_hungry.mat",
-      "bundle_path": "data/raw/metadata_deconv/stimSpatFreq_hungry.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 561,
-      "sha256": "937bc3e72ce3c69849dab040e10b27319395eab05ba6318de1893843ac237898"
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "predictions_fullTrace_sated.npy",
-      "bundle_path": "data/raw/predictions_fullTrace_sated.npy",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 981141088
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "metadata_deconv/stimAngle_sated.mat",
-      "bundle_path": "data/raw/metadata_deconv/stimAngle_sated.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 3296,
-      "sha256": "af4c55b52fda503a563b8f23187becc7c96fd96de1c2109dfe95ed13a4c91672"
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "metadata_deconv/stimSpatFreq_sated.mat",
-      "bundle_path": "data/raw/metadata_deconv/stimSpatFreq_sated.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 542,
-      "sha256": "11491a105c59928940ef73f0297d3b41a5cba418355d382eac729e9f1d812904"
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "predictions_fullTrace_recovery.npy",
-      "bundle_path": "data/raw/predictions_fullTrace_recovery.npy",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 989230783
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "metadata_deconv/stimAngle_recovery.mat",
-      "bundle_path": "data/raw/metadata_deconv/stimAngle_recovery.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 2810,
-      "sha256": "e09fc077ff00fc1f46b0e4bd7099e8ccccc118e7f2aae2bd6de4acae6f0d8c3e"
-    },
-    {
-      "path_group": "raw",
-      "relative_path": "metadata_deconv/stimSpatFreq_recovery.mat",
-      "bundle_path": "data/raw/metadata_deconv/stimSpatFreq_recovery.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 550,
-      "sha256": "0d34ee03eb7386e021dc1db5e4ae13f589b72228411d47bb2971c09f3f43e503"
-    },
-    {
-      "path_group": "movie",
-      "relative_path": "maleMovieData.mat",
-      "bundle_path": "data/movie/maleMovieData.mat",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 381708668
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "jun8_overlap_cos2_no_top_mode.npz",
-      "bundle_path": "data/cache/jun8_overlap_cos2_no_top_mode.npz",
-      "included_in_bundle": false,
-      "sections": [
-        "models"
-      ],
-      "size_bytes": 5238,
-      "sha256": "b801d3cc997a0ee296206c5279335017ac74854ed025339f30c235e58beddc60"
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "results_all_30_recovery_1_bin.pkl",
-      "bundle_path": "data/cache/results_all_30_recovery_1_bin.pkl",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 7529366
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "results_all_30_sated_1_bin.pkl",
-      "bundle_path": "data/cache/results_all_30_sated_1_bin.pkl",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 7529366
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "results_all_30_sated_1_bin_geometry.pkl",
-      "bundle_path": "data/cache/results_all_30_sated_1_bin_geometry.pkl",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 10755100
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "results_subsample_30_recovery_1_bin_geometry.pkl",
-      "bundle_path": "data/cache/results_subsample_30_recovery_1_bin_geometry.pkl",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 537603100
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "results_subsample_30_sated_1_bin_geometry.pkl",
-      "bundle_path": "data/cache/results_subsample_30_sated_1_bin_geometry.pkl",
-      "included_in_bundle": false,
-      "sections": [
-        "data"
-      ],
-      "size_bytes": 537603100
-    },
-    {
-      "path_group": "styles",
-      "relative_path": "paper_style.mplstyle",
-      "bundle_path": "styles/paper_style.mplstyle",
-      "included_in_bundle": true,
-      "sections": [
-        "data",
-        "models",
-        "continuous-attractor"
-      ],
-      "size_bytes": 652,
-      "sha256": "ee5011fb9d9c25eba5dba1ab6a25e398ffe80e7d8aeb150e8db1014db4dbc836"
-    },
-    {
-      "path_group": "cache",
-      "relative_path": "static_snr_ratio_FR_over_CTR_data.npz",
-      "bundle_path": "data/cache/static_snr_ratio_FR_over_CTR_data.npz",
-      "included_in_bundle": false,
-      "sections": [
-        "models",
-        "static"
-      ],
-      "size_bytes": 1780,
-      "sha256": "53e3e9a87aa2a555160c0212ae7f18a8f5189968f06c8a25fcd797fcf2dc68fe"
-    }
-  ],
+  "data": {
+    "raw": [
+      "predictions_fullTrace_hungry.npy",
+      "metadata_deconv/stimAngle_hungry.mat",
+      "metadata_deconv/stimSpatFreq_hungry.mat",
+      "predictions_fullTrace_sated.npy",
+      "metadata_deconv/stimAngle_sated.mat",
+      "metadata_deconv/stimSpatFreq_sated.mat",
+      "predictions_fullTrace_recovery.npy",
+      "metadata_deconv/stimAngle_recovery.mat",
+      "metadata_deconv/stimSpatFreq_recovery.mat"
+    ],
+    "movie": [
+      "maleMovieData.mat"
+    ],
+    "cache": [
+      "results_all_30_recovery_1_bin.pkl",
+      "results_all_30_sated_1_bin.pkl",
+      "results_all_30_sated_1_bin_geometry.pkl",
+      "results_subsample_30_recovery_1_bin_geometry.pkl",
+      "results_subsample_30_sated_1_bin_geometry.pkl"
+    ]
+  },
+  "models": {
+    "cache": [
+      "jun8_overlap_cos2_no_top_mode.npz"
+    ]
+  },
+  "static": {
+    "cache": [
+      "static_snr_ratio_FR_over_CTR_data.npz"
+    ]
+  },
   "simulation_runs": {
-    "path_group": "runs",
-    "default_bundle_directory": "data/continuous_attractor",
-    "files_per_run": [
+    "dynamic": [
       "run_metadata.json",
       "state_history.npy",
       "energy_metrics.npy"
     ],
-    "included_in_bundle": false,
-    "note": "An energy-metrics path recorded in network_params may substitute for energy_metrics.npy. Exact original run configuration is still required."
-  },
-  "static_simulation_runs": {
-    "path_group": "static_runs",
-    "default_bundle_directory": "data/continuous_attractor_static",
-    "files_per_run": [
+    "static": [
       "run_metadata.json",
       "state_history.npy"
-    ],
-    "included_in_bundle": false,
-    "required_for": [
-      "ED Figure 6a covariance insets"
-    ],
-    "not_required_for": [
-      "ED Figure 6a cached main plot"
     ]
   }
 }
