@@ -1,0 +1,233 @@
+import torch
+import torch.nn as nn
+import numpy as np
+from typing import Dict, List, Optional
+
+class CANNetwork(nn.Module):
+    """
+    A CAN network implemented using PyTorch.
+    """
+    def __init__(self, 
+                 num_neurons: int,
+                 sigma_temp: float,
+                 sigma_input: float,
+                 I_str: float,
+                 I_dir: float,
+                 syn_fail: float,
+                 spon_rel: float,
+                 sigma_eta: float,
+                 input_resistance: float,
+                 ampar_conductance: float,
+                 constrict: float,
+                 recurrent_width_fraction: float,
+                 threshold_active_fraction: float,
+                 block_size: int,
+                 sigma_theta: float,
+                 gain_dynamics: bool = False,
+                 device: Optional[torch.device] = None):
+        """
+        Initialize the CAN network.
+
+        Args:
+            num_neurons (int): Number of neurons.
+            noise (float): Noise (temperature) parameter.
+            sigma_input (float): Input bump width fraction.
+            syn_fail (float): Synaptic failure parameter.
+            spon_rel (float): Spontaneous release parameter.
+            constrict (float): Constriction scaling factor.
+            recurrent_width_fraction (float): Recurrent connectivity width fraction.
+            threshold_active_fraction (float): Fraction of neurons active.
+            I_str (array): Stimulus strength.
+            I_dir (array): Directional stimulus index.
+            num_updates (int): Number of updates per simulation step.
+            device (Optional[torch.device]): Device to run computations.
+        """
+        super().__init__()
+        self.device =torch.device("cpu")# device if device is not None else torch.device("cpu")
+        self.num_neurons = num_neurons
+        self.sigma_temp = sigma_temp
+        self.sigma_input = sigma_input
+        self.syn_fail = syn_fail
+        self.spon_rel = spon_rel
+        self.constrict = constrict
+        self.recurrent_width_fraction = recurrent_width_fraction
+        self.threshold_active_fraction = threshold_active_fraction
+        self.I_str = I_str
+        self.I_dir = I_dir
+        self.sigma_eta = sigma_eta
+        self.input_resistance = input_resistance
+        self.ampar_conductance = ampar_conductance
+        self.block_size = block_size
+        self.sigma_theta_steps = sigma_theta
+        self.gain_dynamics = bool(gain_dynamics)
+        self.generation = 0
+
+        self.weights = torch.zeros((num_neurons, num_neurons), dtype=torch.float32, device=self.device)
+        self.state: Optional[torch.Tensor] = None
+        self.synaptic_drive: Optional[torch.Tensor] = None
+        self.active_count_tensor = torch.tensor(0.0, device=self.device)
+
+        # History tracking lists
+        self.lyapunov: List[float] = []
+        self.activations: List[float] = []
+        self.centres: List[float] = []
+        self.total_activity: List[float] = []
+        self.state_history: List[torch.Tensor] = []
+        self.state_history_path: Optional[str] = None
+        self.state_history_dtype: str = "float32"
+        self.state_history_shape: Optional[tuple[int, int]] = None
+        self.active_pool: Optional[torch.Tensor] = None
+        self.inactive_pool: Optional[torch.Tensor] = None
+        self.active_pos: Optional[torch.Tensor] = None
+        self.inactive_pos: Optional[torch.Tensor] = None
+        self.collect_perf_counters: bool = False
+        self.sample_calls: int = 0
+        self.accept_calls: int = 0
+        self.pool_swap_calls: int = 0
+        self.debug_validate_pools: bool = False
+        self.energy_metrics_enabled: bool = False
+        self.energy_metrics_path: Optional[str] = None
+        self.energy_metrics_dtype: str = "float32"
+        self.energy_metrics_shape: Optional[tuple[int, int]] = None
+        self.energy_prop_count_gen: int = 0
+        self.energy_accept_count_gen: int = 0
+        self.energy_sum_abs_total_drive_gen = torch.tensor(0.0, dtype=torch.float32, device=self.device)
+        self.tuning_curves: dict = {}
+        self.correlations: List[float] = []
+        self.input_fluctuations: List[float] = []
+        self.variances: List[float] = []
+        self.record_diagnostics = False
+
+
+        self.base_A = torch.tensor(self.I_str, device=self.device)
+        self.A = self.base_A.clone()   # mean amplitude
+        self.current_gain_multiplier = 1.0
+        self.num_neurons_tensor = torch.tensor(self.num_neurons, device=self.device, dtype=torch.long)
+        self.center_index_tensor = torch.tensor(int(self.I_dir * self.num_neurons), device=self.device, dtype=torch.long)
+        self.target_active_tensor = torch.tensor(self.threshold_active_fraction * self.num_neurons, device=self.device)
+        self.inv_num_neurons_tensor = torch.tensor(1.0 / self.num_neurons, device=self.device)
+        
+        
+        sigma_idx = self.sigma_input * self.num_neurons                        # width in *index* units
+        d0 = torch.arange(0, (self.num_neurons//2)+1, device=self.device, dtype=torch.float32)
+        self.bump_LUT = torch.exp(-0.5 * (d0 / sigma_idx)**2)  # size ≈ N/2+1
+        distances = torch.arange(self.num_neurons, device=self.device, dtype=torch.long)
+        distances = torch.abs(distances - self.center_index_tensor)
+        distances = torch.minimum(distances, self.num_neurons_tensor - distances)
+        self.distance_to_center = distances
+        self.input_bump_profile = self.bump_LUT[distances]
+
+    def initialize_weights(self) -> None:
+        """
+        Initialize a symmetric weight matrix with periodic boundary conditions.
+        """
+        indices = torch.arange(self.num_neurons, device=self.device)
+        i_matrix = indices.unsqueeze(1)
+        j_matrix = indices.unsqueeze(0)
+        diff = torch.abs(i_matrix - j_matrix)
+        diff = torch.min(diff, self.num_neurons - diff)
+        threshold = self.recurrent_width_fraction * self.num_neurons / 2
+        self.weights = (diff <= threshold).float() / self.num_neurons
+        # Inhibitory connections make negative or by enforcing an average fraction of active in dynamics
+        # self.weights = self.weights - 1*(diff > threshold).float()/self.num_neurons
+        self.weights.fill_diagonal_(0)
+        self.weights = self.weights # MULTIPLY BY 2?
+        # A = torch.randn(self.num_neurons, self.num_neurons, device=self.device)
+        # Q, _ = torch.linalg.qr(A)
+        # self.weights = Q @ self.weights @ Q.T
+
+
+    def initialize_state(self) -> None:
+        """
+        Initialize the network state as a binary vector with a fraction of neurons active.
+        """
+        self.state = torch.zeros(self.num_neurons, dtype=torch.float32, device=self.device)
+        num_active = int(self.threshold_active_fraction * self.num_neurons)
+        # active_indices = torch.randperm(self.num_neurons, device=self.device)[:num_active]
+        #Random index but all together
+        start_index = torch.randint(0, self.num_neurons - num_active + 1, (1,),
+                                     device=self.device).item()
+        active_indices = torch.arange(start_index, start_index + num_active,
+                                       device=self.device) % self.num_neurons
+        self.state[active_indices] = 1.0
+        self.active_count_tensor = self.state.sum()
+
+    def initialize_activity_pools(self) -> None:
+        """Build O(1) sampling pools and inverse-position maps from the current binary state."""
+        if self.state is None:
+            raise ValueError("state is not initialized")
+
+        active_pool = (self.state > 0.5).nonzero(as_tuple=True)[0].to(dtype=torch.long)
+        inactive_pool = (self.state < 0.5).nonzero(as_tuple=True)[0].to(dtype=torch.long)
+
+        self.active_pool = active_pool
+        self.inactive_pool = inactive_pool
+
+        self.active_pos = torch.full((self.num_neurons,), -1, dtype=torch.long, device=self.device)
+        self.inactive_pos = torch.full((self.num_neurons,), -1, dtype=torch.long, device=self.device)
+
+        if active_pool.numel() > 0:
+            self.active_pos[active_pool] = torch.arange(active_pool.numel(), device=self.device, dtype=torch.long)
+        if inactive_pool.numel() > 0:
+            self.inactive_pos[inactive_pool] = torch.arange(inactive_pool.numel(), device=self.device, dtype=torch.long)
+
+        self.sample_calls = 0
+        self.accept_calls = 0
+        self.pool_swap_calls = 0
+
+        if self.debug_validate_pools:
+            self.validate_activity_pools()
+
+    def validate_activity_pools(self) -> None:
+        """Debug-only invariant checks for active/inactive pools and inverse maps."""
+        if self.state is None:
+            raise ValueError("state is not initialized")
+        if self.active_pool is None or self.inactive_pool is None:
+            raise ValueError("activity pools are not initialized")
+        if self.active_pos is None or self.inactive_pos is None:
+            raise ValueError("activity position maps are not initialized")
+
+        active_pool = self.active_pool
+        inactive_pool = self.inactive_pool
+        active_pos = self.active_pos
+        inactive_pos = self.inactive_pos
+
+        if active_pool.numel() + inactive_pool.numel() != self.num_neurons:
+            raise ValueError("active/inactive pool sizes do not sum to num_neurons")
+
+        combined = torch.cat((active_pool, inactive_pool))
+        if torch.unique(combined).numel() != self.num_neurons:
+            raise ValueError("activity pools are missing or duplicating neuron indices")
+
+        expected_active = torch.arange(active_pool.numel(), device=self.device, dtype=torch.long)
+        expected_inactive = torch.arange(inactive_pool.numel(), device=self.device, dtype=torch.long)
+        if active_pool.numel() > 0 and not torch.equal(active_pos[active_pool], expected_active):
+            raise ValueError("active_pos map is inconsistent with active_pool")
+        if inactive_pool.numel() > 0 and not torch.equal(inactive_pos[inactive_pool], expected_inactive):
+            raise ValueError("inactive_pos map is inconsistent with inactive_pool")
+        if active_pool.numel() > 0 and torch.any(inactive_pos[active_pool] != -1):
+            raise ValueError("inactive_pos has non-sentinel entries for active neurons")
+        if inactive_pool.numel() > 0 and torch.any(active_pos[inactive_pool] != -1):
+            raise ValueError("active_pos has non-sentinel entries for inactive neurons")
+
+        if int((self.state > 0.5).sum().item()) != active_pool.numel():
+            raise ValueError("active_pool size disagrees with binary state")
+        if int((self.state < 0.5).sum().item()) != inactive_pool.numel():
+            raise ValueError("inactive_pool size disagrees with binary state")
+
+    def update_state(self, update_strategy: "UpdateStrategy",
+                     rand_index: Optional[torch.Tensor] = None,
+                     neuron_noise: Optional[torch.Tensor] = None) -> None:
+        """
+        Update the network state using a provided update strategy.
+
+        Args:
+            update_strategy (UpdateStrategy): The update strategy to apply.
+        """
+        update_strategy.update(self, rand_index=rand_index, neuron_noise=neuron_noise)
+
+    def reset_energy_counters(self) -> None:
+        """Reset per-generation energy accumulators."""
+        self.energy_prop_count_gen = 0
+        self.energy_accept_count_gen = 0
+        self.energy_sum_abs_total_drive_gen.zero_()

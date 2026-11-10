@@ -1,0 +1,38 @@
+# Fonts
+font.family: sans-serif
+font.sans-serif: Helvetica, Arial, Liberation Sans, Nimbus Sans, DejaVu Sans
+
+font.size: 7
+axes.labelsize: 7
+xtick.labelsize: 6
+ytick.labelsize: 6
+legend.fontsize: 6
+
+# Lines and markers
+lines.linewidth: 1.0
+lines.markersize: 3
+
+# Axes
+axes.linewidth: 0.6
+axes.spines.top: False
+axes.spines.right: False
+
+# Ticks
+xtick.major.size: 2.5
+ytick.major.size: 2.5
+xtick.major.width: 0.6
+ytick.major.width: 0.6
+xtick.direction: out
+ytick.direction: out
+
+# Saving
+savefig.dpi: 300
+savefig.transparent: True
+savefig.bbox: tight
+savefig.pad_inches: 0.02
+
+# Vector text handling
+pdf.fonttype: 42
+ps.fonttype: 42
+svg.fonttype: none
+

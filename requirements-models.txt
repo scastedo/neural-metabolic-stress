@@ -1,0 +1,5 @@
+# Install this file for all three notebooks and the optional simulator.
+-r requirements.txt
+# Versions recorded from the existing model environment.
+torch==2.6.0
+plotly==6.0.0
